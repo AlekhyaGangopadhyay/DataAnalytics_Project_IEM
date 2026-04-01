@@ -1,0 +1,39 @@
+---
+title: "House Price Prediction using Boston Housing Dataset in R"
+author: "Alekhya Gangopadhyay"
+output: word_document
+---
+
+# 1. Introduction
+House price prediction is an important application of machine learning. In this project, we use the Boston Housing dataset to predict median house prices.
+
+---
+
+# 2. Load Libraries
+
+```{r}
+library(MASS)
+library(caret)
+data(Boston)
+head(Boston)
+str(Boston)
+summary(Boston)
+dim(Boston)
+colSums(is.na(Boston))
+cor(Boston)
+plot(Boston$rm, Boston$medv, col="blue", pch=19)
+set.seed(123)
+trainIndex <- createDataPartition(Boston$medv, p=0.8, list=FALSE)
+
+train <- Boston[trainIndex, ]
+test <- Boston[-trainIndex, ]
+model <- lm(medv ~ ., data=train)
+summary(model)
+pred <- predict(model, newdata=test)
+head(pred)
+actual <- test$medv
+
+rmse <- sqrt(mean((actual - pred)^2))
+rmse
+plot(actual, pred, col="red", pch=19)
+abline(0,1)

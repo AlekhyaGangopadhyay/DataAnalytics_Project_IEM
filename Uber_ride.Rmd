@@ -1,0 +1,85 @@
+---
+title: "Uber Ride Data Analysis for Revenue Optimization"
+author: "Alekhya Gangopadhyay"
+output: word_document
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Load dataset
+uber <- read.csv("D:/Downloads/ncr_ride_bookings.csv")
+
+# Remove NA
+uber <- na.omit(uber)
+
+# -----------------------------
+# FIX COLUMN NAMES (IMPORTANT)
+# -----------------------------
+names(uber) <- make.names(names(uber))
+
+# -----------------------------
+# COMBINE DATE + TIME
+# -----------------------------
+uber$datetime <- as.POSIXct(
+  paste(uber$Date, uber$Time),
+  format="%Y-%m-%d %H:%M:%S"
+)
+
+# Extract features
+uber$hour <- factor(format(uber$datetime, "%H"))
+
+uber$day <- factor(
+  format(uber$datetime, "%A"),
+  levels = c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+)
+
+# -----------------------------
+# CLEAN REVENUE COLUMN
+# -----------------------------
+uber$Booking.Value <- as.numeric(gsub("[^0-9.]", "", uber$Booking.Value))
+
+# -----------------------------
+# ANALYSIS
+# -----------------------------
+
+# Rides by hour
+ggplot(uber, aes(x=hour)) +
+  geom_bar(fill="blue") +
+  ggtitle("Rides by Hour")
+
+# Rides by day
+ggplot(uber, aes(x=day)) +
+  geom_bar(fill="green") +
+  ggtitle("Rides by Day")
+
+# Revenue analysis
+hourly_rev <- uber %>%
+  group_by(hour) %>%
+  summarise(
+    trips = n(),
+    revenue = sum(Booking.Value, na.rm = TRUE)
+  )
+
+hourly_rev
+
+# Revenue trend
+ggplot(hourly_rev, aes(x=hour, y=revenue, group=1)) +
+  geom_line(color="red") +
+  geom_point() +
+  ggtitle("Revenue by Hour")
+
+# Payment method analysis
+if("Payment.Method" %in% names(uber)){
+  ggplot(uber, aes(x=Payment.Method)) +
+    geom_bar(fill="purple") +
+    ggtitle("Payment Methods")
+}
+
+# Booking status analysis
+if("Booking.Status" %in% names(uber)){
+  ggplot(uber, aes(x=Booking.Status)) +
+    geom_bar(fill="orange") +
+    ggtitle("Booking Status")
+}
